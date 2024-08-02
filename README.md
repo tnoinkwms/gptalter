@@ -1,4 +1,4 @@
-# FastMotionGeneration# From Text to Motion: Grounding GPT-4 in a Humanoid Robot “Alter3”
+# FastMotionGeneration
 
 ## Introduction
 This repository contains the implementation described in the paper [From Text to Motion: Grounding GPT-4 in a Humanoid Robot “Alter3”](https://arxiv.org/html/2312.06571v1). 
