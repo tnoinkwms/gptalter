@@ -1,0 +1,28 @@
+### 1
+
+# Eyebrows to neutral position
+alter.set_axes([1], [64])
+time.sleep(0.2)
+
+# Set pupils to neutral position
+alter.set_axes([2, 3], [140, 128])
+time.sleep(0.2)
+
+# Open eyes wide
+alter.set_axes([4], [0])
+time.sleep(0.2)
+
+# Tilt the head down
+alter.set_axes([10], [255])
+time.sleep(0.2)
+
+# Lean forward by tilting the hips
+alter.set_axes([13], [0])
+time.sleep(0.2)
+
+# Repeat the slithering motion by lowering and raising the body
+for i in range(3):
+    alter.set_axes([42], [0])  # Lower body
+    time.sleep(0.5)
+    alter.set_axes([42], [255])  # Raise body
+    time.sleep(0.5)

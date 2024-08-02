@@ -1,0 +1,32 @@
+### 4
+
+# Eyebrows to neutral position
+alter.set_axes([1], [64])
+time.sleep(0.2)
+
+# Set pupils to focused position
+alter.set_axes([2, 3], [140, 128])
+time.sleep(0.2)
+
+# Open eyes wide
+alter.set_axes([4], [0])
+time.sleep(0.2)
+
+# Raise both shoulders up
+alter.set_axes([16, 29], [255, 255])
+time.sleep(0.2)
+
+# Curl fingers into claws (bent position)
+alter.set_axes([25, 26, 27, 28], [255, 255, 255, 255])
+time.sleep(0.2)
+
+# Move arms forward in a striking motion
+alter.set_axes([19, 32], [255, 255])
+time.sleep(0.2)
+
+# Repeat striking motion towards imaginary prey
+for i in range(3):
+    alter.set_axes([19, 32], [255, 255])
+    time.sleep(0.3)
+    alter.set_axes([19, 32], [0, 0])
+    time.sleep(0.3)

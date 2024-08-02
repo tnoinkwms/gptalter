@@ -1,0 +1,21 @@
+### 4
+
+# Eyebrows to neutral position
+alter.set_axes([1], [64])
+time.sleep(0.2)
+
+# Set pupils to neutral position
+alter.set_axes([2, 3], [140, 128])
+time.sleep(0.2)
+
+# Open eyes wide
+alter.set_axes([4], [0])
+time.sleep(0.2)
+
+# Tilt head to the left to show curiosity
+alter.set_axes([9], [255])
+time.sleep(0.2)
+
+# Return head to neutral position
+alter.set_axes([9], [128])
+time.sleep(0.2)

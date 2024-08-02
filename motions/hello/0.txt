@@ -1,0 +1,24 @@
+### 0
+# Eyebrows to neutral position
+alter.set_axes([1], [64])
+time.sleep(0.2)
+
+# Set pupils to neutral position
+alter.set_axes([2, 3], [140, 128])
+time.sleep(0.2)
+
+# Open eyes wide
+alter.set_axes([4], [0])
+time.sleep(0.2)
+
+# Raise cheeks for a big smile
+alter.set_axes([5, 6], [255, 255])
+time.sleep(0.2)
+
+# Pucker lips slightly
+alter.set_axes([7], [0])
+time.sleep(0.2)
+
+# Open mouth wide for a bright expression
+alter.set_axes([8], [255])
+time.sleep(0.2)

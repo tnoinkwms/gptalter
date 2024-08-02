@@ -1,0 +1,25 @@
+### 5
+
+# Eyebrows to furrowed
+alter.set_axes([1], [255])
+time.sleep(0.1)
+
+# Set pupils to neutral position
+alter.set_axes([2, 3], [140, 128])
+time.sleep(0.1)
+
+# Open eyes wide
+alter.set_axes([4], [0])
+time.sleep(0.1)
+
+# Tilt the head back slightly
+alter.set_axes([10], [255])
+time.sleep(0.1)
+
+# Arch the back by tilting the waist backward
+alter.set_axes([14], [255])
+time.sleep(0.1)
+
+# Puff out chest by lifting the abdomen
+alter.set_axes([16], [255])
+time.sleep(0.1)

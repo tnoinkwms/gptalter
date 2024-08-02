@@ -1,0 +1,40 @@
+### 8
+
+# Eyebrows to neutral position
+alter.set_axes([1], [64])
+time.sleep(0.2)
+
+# Set pupils to neutral position
+alter.set_axes([2, 3], [140, 128])
+time.sleep(0.2)
+
+# Close eyes gently
+alter.set_axes([4], [255])
+time.sleep(0.2)
+
+# Relax cheeks
+alter.set_axes([5, 6], [0, 0])
+time.sleep(0.2)
+
+# Relax lips
+alter.set_axes([7], [0])
+time.sleep(0.2)
+
+# Close mouth
+alter.set_axes([8], [0])
+time.sleep(0.2)
+
+# Tilt head slightly to the left for a cunning expression
+alter.set_axes([9], [255])
+time.sleep(0.2)
+
+# Return head to neutral position
+alter.set_axes([9], [128])
+time.sleep(0.2)
+
+# Maintain the cunning expression with slight adjustments
+for i in range(3):
+    alter.set_axes([1, 9], [255, 128])  # Eyebrows down, head neutral
+    time.sleep(0.5)
+    alter.set_axes([1, 9], [64, 128])    # Eyebrows neutral, head neutral
+    time.sleep(0.5)

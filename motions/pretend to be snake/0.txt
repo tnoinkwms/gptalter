@@ -1,0 +1,25 @@
+### 0
+
+# Eyebrows to furrowed position for a sly look
+alter.set_axes([1], [255])
+time.sleep(0.2)
+
+# Set pupils to narrowed position
+alter.set_axes([2], [140])
+time.sleep(0.2)
+
+# Set vertical pupils to neutral
+alter.set_axes([3], [128])
+time.sleep(0.2)
+
+# Open eyes slightly to enhance the expression
+alter.set_axes([4], [0])
+time.sleep(0.2)
+
+# Pucker lips to mimic sticking out tongue
+alter.set_axes([7], [255])
+time.sleep(0.2)
+
+# Open mouth slightly to complete the expression
+alter.set_axes([8], [255])
+time.sleep(0.2)

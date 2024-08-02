@@ -1,0 +1,28 @@
+### 6
+
+# Eyebrows to neutral position
+alter.set_axes([1], [64])
+time.sleep(0.2)
+
+# Set pupils to neutral position
+alter.set_axes([2, 3], [140, 128])
+time.sleep(0.2)
+
+# Open eyes wide
+alter.set_axes([4], [0])
+time.sleep(0.2)
+
+# Relax lips
+alter.set_axes([7], [0])
+time.sleep(0.2)
+
+# Open mouth slightly
+alter.set_axes([8], [200])
+time.sleep(0.2)
+
+# Rapidly flick tongue in and out
+for i in range(5):
+    alter.set_axes([7], [255])  # Pucker lips
+    time.sleep(0.1)
+    alter.set_axes([7], [0])    # Relax lips
+    time.sleep(0.1)
