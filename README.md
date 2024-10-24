@@ -8,6 +8,7 @@ pip install -U git+https://github.com/tnoinkwms/gptalter.git
 import gptalter
 
 mg = gptalter.MotionGenerator(API =YOUR_API, save = True, show = True)
+alter, all_axis, init_value = mg.initalter()
 mg.run("say Hello")
 
 #OR
