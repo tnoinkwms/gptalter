@@ -16,6 +16,7 @@ from concurrent.futures import ThreadPoolExecutor
 class MotionGenerator:
     def __init__(self, API, gpt3 = "gpt-4o-mini", gpt4 = "gpt-4-turbo", save = False, show=False, serial_device = "/dev/tty.usbserial-FT2KYV79"):
         super(MotionGenerator, self).__init__()
+        global alter
         nest_asyncio.apply()
         openai.api_key = API
         self.gpt4 = ChatOpenAI(temperature=0.7,model_name=gpt4, openai_api_key = openai.api_key)
@@ -161,11 +162,16 @@ class MotionGenerator:
         input: {input}
         """
         self.alter = pyalter.Alter3("serial", serial_port=serial_device)
+        alter = self.alter
         self.all_axes  = list(np.arange(1,44))
         self.initial_value = [64,140,128,0,0,0,0,0,128,160,122,128,128,128,128,128,64,64,64,32,32,128,128,0,0,0,0,0,64,64,64,64,32,32,128,128,0,0,0,0,0,128,185]
         self.new_directory_path = None
         self.recipe = None
         self.motion_dir = self.create_dir()
+
+    def initalter(self):
+        self.alter.set_axis(self.all_axes,self.initial_value)
+        return self.alter, self.all_axes, self.initial_value
 
     def create_dir(self):
         current_directory = os.getcwd()
@@ -259,11 +265,14 @@ class MotionGenerator:
             path = self.new_directory_path
         else:
             path = path
-        self.alter.set_axes(self.all_axes, self.initial_value)
-        files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
+        self.initalter()
+        files = [
+            f for f in os.listdir(path)
+            if os.path.isfile(os.path.join(path, f)) and not f.startswith('recipe')
+        ]
         files.sort(key=lambda f: int(f.split('.')[0]))
         for filename in files:
-            with open(os.path.join(self.new_directory_path, filename), 'r') as file:
+            with open(os.path.join(path, filename), 'r') as file:
                 content = file.read()
                 code_blocks = self.identify_code_blocks_by_newlines(content)
                 for index, code in enumerate(code_blocks):
@@ -273,10 +282,11 @@ class MotionGenerator:
                     except Exception as e:
                         print(code)
                         print(f"Error in block {index + 1}: {str(e)}")
-        with open(f"{path}/recipe.txt", 'a', encoding='utf-8') as f:
-            for item in self.recipe:
-                f.write(f"{item}\n")
-        self.alter.set_axes(self.all_axes, self.initial_value)
+        if path == self.new_directory_path:
+            with open(f"{path}/recipe.txt", 'a', encoding='utf-8') as f:
+                for item in self.recipe:
+                    f.write(f"{item}\n")
+        self.initalter()
         if self.save == False:
             shutil.rmtree(path)
 
