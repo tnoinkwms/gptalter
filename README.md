@@ -17,4 +17,11 @@ mg.prompt1("pretend to be a ghost")
 mg.prompt2()
 mg.execute_code()
 
+# OR
+
+mg = gptalter.MotionGenerator(API= YOUR_API, OSC =True, ip = "127.0.0.1", port = 60001)
+send_osc_data, all_axis, init_value = mg.initalter()
+send_osc_data([1,2],[0,255])
+mg.run("say Hello")
+
 ```
