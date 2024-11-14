@@ -1,0 +1,8 @@
+README.md
+setup.py
+gptalter/MotionGenerator.py
+gptalter/__init__.py
+gptalter.egg-info/PKG-INFO
+gptalter.egg-info/SOURCES.txt
+gptalter.egg-info/dependency_links.txt
+gptalter.egg-info/top_level.txt

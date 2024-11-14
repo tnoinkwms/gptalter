@@ -12,21 +12,22 @@ import shutil
 from langchain.prompts import PromptTemplate
 from langchain_openai import ChatOpenAI
 from concurrent.futures import ThreadPoolExecutor
+from pythonosc import udp_client
 
 class MotionGenerator:
-    def __init__(self, API, gpt3 = "gpt-4o-mini", gpt4 = "gpt-4-turbo", save = False, show=False, serial_device = "/dev/tty.usbserial-FT2KYV79"):
+    def __init__(self, API,OSC = False, ip='127.0.0.1', port=60017, limit = False, maxmsp = True, gpt3 = "gpt-4o-mini", gpt4 = "gpt-4-turbo", save = True, show=False, serial_device = "/dev/tty.usbserial-FT2KYV79"):
         super(MotionGenerator, self).__init__()
-        global alter
+        global alter, send_osc_data
         nest_asyncio.apply()
         openai.api_key = API
         self.gpt4 = ChatOpenAI(temperature=0.7,model_name=gpt4, openai_api_key = openai.api_key)
-        self.gpt4_low_temp = ChatOpenAI(temperature=0.3, model_name=gpt4, openai_api_key = openai.api_key)
+        self.gpt4_low_temp = ChatOpenAI(temperature=0.0, model_name=gpt4, openai_api_key = openai.api_key)
         self.gpt3 = ChatOpenAI(temperature=0.2,model_name=gpt3, openai_api_key = openai.api_key)
         os.environ["OPENAI_API_KEY"] = openai.api_key
         self.show = show
         self.save = save
         self.prompt_1= """
-        Your task is to describe exaggerate emotional expressions and facial expressions that accompany the content of the conversation. Output motion description should be several simple motions that the android is capable of. In addition, please create a facial expression that matches the input at the beginning. The android can only move its upper body and has the same joints as a human. Output shoul be written as much detail as possible.\
+        Your task is to describe exaggerate emotional expressions and facial expressions that accompany the content of the input text. Output motion description should be several simple motions that the android is capable of. In addition, please create a facial expression that matches the input at the beginning. The android can only move its upper body and has the same joints as a human. Output shoul be written as much detail as possible.\
 
         Exammple1:\
         '''
@@ -153,25 +154,73 @@ class MotionGenerator:
 
         Guidelines:\
         1: Output should be only python code. Do not insert any syntax highlighting like ```.
-        2: The input begins with a number, such as "0" or "2". The output should start with "### 0" or "### 2" depending on the number.
+        2: IMPORTANT! The input begins with a number, such as "0" or "2". The output should start with "### 0" or "### 2" depending on the number.
         3: Do not Create an instance of alter3.
         4: Do not insert python syntax highlighting like ```python ```.
         5: Do not write "import alter".
         6: Use # and write short description of code.
+        7: IMPORTANT! The input begins with a number, such as "0" or "2". The output should start with "### 0" or "### 2" depending on the number.
+        8: Please ensure that this rule is absolutely adhered to. 
 
         input: {input}
         """
-        self.alter = pyalter.Alter3("serial", serial_port=serial_device)
-        alter = self.alter
+
         self.all_axes  = list(np.arange(1,44))
         self.initial_value = [64,140,128,0,0,0,0,0,128,160,122,128,128,128,128,128,64,64,64,32,32,128,128,0,0,0,0,0,64,64,64,64,32,32,128,128,0,0,0,0,0,128,185]
         self.new_directory_path = None
         self.recipe = None
         self.motion_dir = self.create_dir()
+        if OSC == True:
+            self.OSC = True
+            self.ip = ip
+            self.port = port
+            send_osc_data = self.send_osc_data
+            self.maxmsp = maxmsp
+            self.client = udp_client.SimpleUDPClient(self.ip, self.port)
+        else:
+            self.OSC = False
+            self.alter = pyalter.Alter3("serial", serial_port=serial_device)
+            alter = self.alter
+        
+        self.limit = limit
+
+    def limit_value(self,val2):
+        if val2 > 235:
+            val2 = 235
+        if val2 < 20:
+            val2 = 20
+        return 20
+
+    def limitation(self, val1, val2):
+        if val1 == 31 or val1 == 18 or val1 == 20 or val1 ==33 or val1 == 19 or val1 == 32:
+            val2 = self.limit_value(val2)
+        return val1, val2
+
+    def send_osc_data(self, list1, list2):
+        # OSCクライアントの設定
+        # リストの要素数が異なる場合はエラー
+        if len(list1) != len(list2):
+            raise ValueError("Both lists should have the same number of elements.")
+        # データの送信
+        for val1, val2 in zip(list1, list2):
+            if self.limit == True:
+                val1, val2 = self.limitation(val1,val2)
+            if self.maxmsp == True:
+                if val1 == 32:
+                    val1 = 52
+                if val2 == 0:
+                    val2 = 3
+            channel = f"/osc_{val1}"
+            message = val2
+            self.client.send_message(channel, message)
 
     def initalter(self):
-        self.alter.set_axis(self.all_axes,self.initial_value)
-        return self.alter, self.all_axes, self.initial_value
+        if self.OSC == False:
+            self.alter.set_axis(self.all_axes,self.initial_value)
+            return self.alter, self.all_axes, self.initial_value
+        else:
+            self.send_osc_data(self.all_axes,self.initial_value)
+            return self.send_osc_data, self.all_axes, self.initial_value
 
     def create_dir(self):
         current_directory = os.getcwd()
@@ -230,34 +279,38 @@ class MotionGenerator:
         responses = self.async_gpt_responses(self.recipe, self.new_directory_path)
         if self.show == True:
             print(f" \033[92m TIME: {time.time()-start_time} \033[0m ")
-
+    
     def identify_code_blocks_by_newlines(self, content):
         blocks = []
         code_block = []
-        in_code_block = False 
+        in_code_block = False  # flag to indicate if we are inside a code block
 
-        for line in content:
+        for line in content.split('\n'):  # 行単位で処理するために split('\n') を使用
+            # Replace 'alter.set_axes' with 'send_osc_data'
             stripped_line = line.strip()
-            if stripped_line:
+            if stripped_line:  # if line is not empty
+                # Comment out specific lines
+                if self.OSC == True:
+                    line = line.replace('alter.set_axes', 'send_osc_data')
                 if stripped_line.startswith("```"):
-                    line = "#"+ line
+                    line = "#" + line
                 if stripped_line.startswith("while"):
-                    line = "#"+ line
+                    line = "#" + line
                 code_block.append(line)
                 in_code_block = True
             elif in_code_block:
-                if line.startswith("```"):
-                    line = "#"+ line
-                if line.startswith("while"):
-                    line = "#"+ line
+                # if line is empty but we are inside a code block
                 code_block.append(line)
             else:  # end of a code block
                 if code_block:
-                    blocks.append("".join(code_block))
+                    blocks.append("\n".join(code_block))
                     code_block = []
                     in_code_block = False
+
+        # Handle the last block of code, if any
         if code_block:
-            blocks.append("".join(code_block))
+            blocks.append("\n".join(code_block))
+
         return blocks
 
     def execute_code(self, path = None):
@@ -287,8 +340,6 @@ class MotionGenerator:
                 for item in self.recipe:
                     f.write(f"{item}\n")
         self.initalter()
-        if self.save == False:
-            shutil.rmtree(path)
 
     def run(self, message):
         self.recipe, self.news_directory_path = self.prompt1(message)
