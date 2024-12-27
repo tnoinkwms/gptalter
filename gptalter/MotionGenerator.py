@@ -15,15 +15,15 @@ from concurrent.futures import ThreadPoolExecutor
 from pythonosc import udp_client
 
 class MotionGenerator:
-    def __init__(self, API,OSC = False, ip='127.0.0.1', port=60017, limit = False, maxmsp = True, gpt3 = "gpt-4o-mini", gpt4 = "gpt-4-turbo", save = True, show=False, serial_device = "/dev/tty.usbserial-FT2KYV79"):
+    def __init__(self, OSC = False, ip='127.0.0.1', port=60017, limit = False, maxmsp = True, gpt3 = "gpt-4o-mini", gpt4 = "gpt-4-turbo", save = True, show=False, serial_device = "/dev/tty.usbserial-FT2KYV79"):
         super(MotionGenerator, self).__init__()
         global alter, send_osc_data
         nest_asyncio.apply()
-        openai.api_key = API
+        #openai.api_key = API
         self.gpt4 = ChatOpenAI(temperature=0.7,model_name=gpt4, openai_api_key = openai.api_key)
         self.gpt4_low_temp = ChatOpenAI(temperature=0.0, model_name=gpt4, openai_api_key = openai.api_key)
         self.gpt3 = ChatOpenAI(temperature=0.2,model_name=gpt3, openai_api_key = openai.api_key)
-        os.environ["OPENAI_API_KEY"] = openai.api_key
+        #os.environ["OPENAI_API_KEY"] = openai.api_key
         self.show = show
         self.save = save
         self.prompt_1= """
@@ -86,7 +86,7 @@ class MotionGenerator:
         - Axis 2: Pupils (horizontal). 255 = left, 0 = right, 140 = neutral.
         - Axis 3: Pupils (vertical) . 255 = up, 0 = down, 128 = neutral.
         - Axis 4: Eyes. 255 = closed, 0 = open.
-        - Axis 5-6: Left/Right cheek. 255 = raised (smile), 0 = lowered.
+        - Axis 5-6: Left/Right cheek. 255 = raised, 0 = lowered.
         - Axis 7: Lips. 255 = puckered, 0 = relaxed.
         - Axis 8: Mouth. 255 = open, 0 = closed.
         - Axis 9: Head tilt. 255 = left, 0 = right, 128 = neutral.
@@ -156,11 +156,10 @@ class MotionGenerator:
         1: Output should be only python code. Do not insert any syntax highlighting like ```.
         2: IMPORTANT! The input begins with a number, such as "0" or "2". The output should start with "### 0" or "### 2" depending on the number.
         3: Do not Create an instance of alter3.
-        4: Do not insert python syntax highlighting like ```python ```.
+        4: Do not insert python syntax highlighting like ```python ``` ot "output".
         5: Do not write "import alter".
         6: Use # and write short description of code.
-        7: IMPORTANT! The input begins with a number, such as "0" or "2". The output should start with "### 0" or "### 2" depending on the number.
-        8: Please ensure that this rule is absolutely adhered to. 
+        7: Please ensure that this rule is absolutely adhered to. 
 
         input: {input}
         """
@@ -181,7 +180,6 @@ class MotionGenerator:
             self.OSC = False
             self.alter = pyalter.Alter3("serial", serial_port=serial_device)
             alter = self.alter
-        
         self.limit = limit
 
     def limit_value(self,val2):
@@ -252,7 +250,14 @@ class MotionGenerator:
             for i in range(len(self.recipe)):
                 print(f"\033[94m{self.recipe[i]}\033[0m")
         return self.recipe, self.new_directory_path
-    
+    def just_run_prompt2(self, systemprompt: str) -> str:
+        PROMPT_2 =  PromptTemplate.from_template(self.prompt_2)
+        code_gen = PROMPT_2 | self.gpt4_low_temp
+        code = code_gen.invoke({"input": systemprompt}).content
+        num = re.findall(r'\d+', code[0:10])
+        if self.show == True:
+            print(f"\033[94m {num} -> DONE \033[0m")
+        return code
     def get_gpt_response(self,systemprompt: str, new_directory_path) -> str:
         PROMPT_2 =  PromptTemplate.from_template(self.prompt_2)
         code_gen = PROMPT_2 | self.gpt4_low_temp
@@ -312,7 +317,16 @@ class MotionGenerator:
             blocks.append("\n".join(code_block))
 
         return blocks
-
+    def execute_code_blocks(self, code):
+        code_blocks = self.identify_code_blocks_by_newlines(code)
+        for index, code in enumerate(code_blocks):
+            try:
+                exec_locals = {}
+                exec(code, globals(), exec_locals)
+            except Exception as e:
+                print(code)
+                print(f"Error in block {index + 1}: {str(e)}")
+        #self.initalter()
     def execute_code(self, path = None):
         if path == None:
             path = self.new_directory_path
@@ -345,3 +359,4 @@ class MotionGenerator:
         self.recipe, self.news_directory_path = self.prompt1(message)
         self.prompt2()
         self.execute_code()
+        return self.recipe
