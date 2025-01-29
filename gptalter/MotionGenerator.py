@@ -317,6 +317,8 @@ class MotionGenerator:
             blocks.append("\n".join(code_block))
 
         return blocks
+    def servo_off(self):
+        self.alter.servo_off()
     def execute_code_blocks(self, code):
         code_blocks = self.identify_code_blocks_by_newlines(code)
         for index, code in enumerate(code_blocks):
